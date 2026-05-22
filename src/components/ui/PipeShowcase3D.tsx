@@ -53,6 +53,7 @@ function TextSection({
   peakEnd,
   outEnd,
   align,
+  verticalAlign = 'center',
   startVisible = false,
   children,
 }: {
@@ -62,6 +63,7 @@ function TextSection({
   peakEnd: number;
   outEnd: number;
   align: 'left' | 'center' | 'right';
+  verticalAlign?: 'top' | 'center' | 'bottom';
   startVisible?: boolean;
   children: React.ReactNode;
 }) {
@@ -81,9 +83,14 @@ function TextSection({
     startVisible ? [0, 0] : align === 'center' ? [50, 0] : align === 'right' ? [30, 0] : [-30, 0],
   );
 
+  const vClass =
+    verticalAlign === 'top' ? 'items-start pt-28' :
+    verticalAlign === 'bottom' ? 'items-end pb-16' :
+    'items-center';
+
   return (
     <div
-      className={`absolute inset-0 flex items-center px-8 md:px-20 ${
+      className={`absolute inset-0 flex ${vClass} px-8 md:px-20 ${
         align === 'center'
           ? 'justify-center'
           : align === 'right'
@@ -140,13 +147,12 @@ function PipeModel({ scrollProgress }: { scrollProgress: MotionValue<number> }) 
     if (!groupRef.current) return;
     const g = groupRef.current;
 
-    // Stage 0 — Rise into view (0 → 0.2) — starts partially visible
+    // Stage 0 — Visible and rotating from the start (0 → 0.2)
     if (p < 0.2) {
-      const t = smoothStep(remap(p, 0, 0.2));
-      g.position.y = THREE.MathUtils.lerp(-1.5, 0, t);
+      g.position.y = 0;
       g.position.x = 0;
-      g.scale.setScalar(THREE.MathUtils.lerp(0.8, 1.2, t));
-      g.rotation.z = THREE.MathUtils.lerp(-0.2, 0, t);
+      g.scale.setScalar(THREE.MathUtils.lerp(1.0, 1.2, smoothStep(remap(p, 0, 0.2))));
+      g.rotation.z = 0;
       g.rotation.y += delta * 0.25;
     }
     // Stage 1 — Drift left & scale up (0.2 → 0.42)
@@ -401,30 +407,31 @@ export const PipeShowcase3D = () => {
         {/* Scroll-driven text overlays */}
         <div className="absolute inset-0 pointer-events-none">
 
-          {/* 1 — Hero (visible from the very first frame) */}
+          {/* 1 — Hero (visible from the very first frame, sits at top so pipe is visible below) */}
           <TextSection
             scrollProgress={scrollYProgress}
-            inStart={0} peakStart={0.001} peakEnd={0.14} outEnd={0.21}
+            inStart={0} peakStart={0.001} peakEnd={0.17} outEnd={0.24}
             align="center"
+            verticalAlign="top"
             startVisible
           >
             <div className="text-center">
-              <span className="text-primary font-black tracking-[1em] uppercase text-xs md:text-sm mb-10 block">
+              <span className="text-primary font-black tracking-[1em] uppercase text-xs md:text-sm mb-4 block">
                 Precision // Resilience // Quality
               </span>
-              <h1 className="text-[7rem] md:text-[14rem] font-black text-white tracking-[-0.05em] uppercase italic leading-[0.72]">
+              <h1 className="text-[3rem] md:text-[6rem] font-black text-white tracking-[-0.05em] uppercase italic leading-[0.85]">
                 SANGHI
                 <br />
-                <span className="stroke-text text-transparent not-italic block mt-4">
+                <span className="stroke-text text-transparent not-italic block mt-2">
                   INDUSTRIES
                 </span>
               </h1>
-              <div className="flex items-center justify-center gap-12 mt-10">
-                <div className="h-px w-36 bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
-                <p className="text-lg text-slate-500 font-light tracking-[0.8em] uppercase">
+              <div className="flex items-center justify-center gap-8 mt-5">
+                <div className="h-px w-24 bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
+                <p className="text-sm text-slate-500 font-light tracking-[0.8em] uppercase">
                   EST. 2008
                 </p>
-                <div className="h-px w-36 bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
+                <div className="h-px w-24 bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
               </div>
             </div>
           </TextSection>
@@ -432,7 +439,7 @@ export const PipeShowcase3D = () => {
           {/* 2 — Ductile Iron specs */}
           <TextSection
             scrollProgress={scrollYProgress}
-            inStart={0.22} peakStart={0.28} peakEnd={0.38} outEnd={0.45}
+            inStart={0.18} peakStart={0.24} peakEnd={0.38} outEnd={0.45}
             align="left"
           >
             <div className="max-w-xl">
@@ -472,7 +479,7 @@ export const PipeShowcase3D = () => {
           {/* 3 — Internal analysis panel */}
           <TextSection
             scrollProgress={scrollYProgress}
-            inStart={0.5} peakStart={0.56} peakEnd={0.67} outEnd={0.74}
+            inStart={0.44} peakStart={0.50} peakEnd={0.67} outEnd={0.74}
             align="right"
           >
             <div className="max-w-sm bg-slate-950/85 backdrop-blur-2xl p-8 rounded-[2rem] border border-white/[0.08] shadow-2xl relative">
@@ -530,7 +537,7 @@ export const PipeShowcase3D = () => {
           {/* 4 — Final stats */}
           <TextSection
             scrollProgress={scrollYProgress}
-            inStart={0.8} peakStart={0.86} peakEnd={0.97} outEnd={1.0}
+            inStart={0.73} peakStart={0.79} peakEnd={0.97} outEnd={1.0}
             align="center"
           >
             <div className="text-center">

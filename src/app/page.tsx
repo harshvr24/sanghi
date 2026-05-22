@@ -15,9 +15,45 @@ export default function Home() {
   const featuredProducts = products.slice(0, 4);
 
   return (
-    <div className="overflow-hidden bg-slate-950">
+    <div className="bg-slate-950">
       {/* 3D Hero Section */}
-      <Suspense fallback={<div className="h-screen w-full bg-slate-950 flex items-center justify-center text-white font-bold">Loading Experience...</div>}>
+      <Suspense
+        fallback={
+          <div className="h-[450vh] w-full bg-slate-950 relative">
+            <div className="sticky top-0 h-screen w-full overflow-hidden">
+              <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(59,130,246,0.055)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.055)_1px,transparent_1px)] bg-[size:80px_80px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_78%)]" />
+              <div className="absolute inset-0 flex items-start pt-28 justify-center px-8">
+                <div className="text-center relative z-10">
+                  <span className="text-primary font-black tracking-[1em] uppercase text-xs md:text-sm mb-4 block">
+                    Precision // Resilience // Quality
+                  </span>
+                  <h1 className="text-[3rem] md:text-[6rem] font-black text-white tracking-[-0.05em] uppercase italic leading-[0.85]">
+                    SANGHI
+                    <br />
+                    <span className="stroke-text text-transparent not-italic block mt-2">
+                      INDUSTRIES
+                    </span>
+                  </h1>
+                  <div className="flex items-center justify-center gap-8 mt-5">
+                    <div className="h-px w-24 bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
+                    <p className="text-sm text-slate-500 font-light tracking-[0.8em] uppercase">EST. 2008</p>
+                    <div className="h-px w-24 bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
+                  </div>
+                  <div className="mt-10 flex items-center justify-center gap-2">
+                    {[0, 150, 300].map((delay) => (
+                      <div
+                        key={delay}
+                        className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce"
+                        style={{ animationDelay: `${delay}ms` }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      >
         <PipeShowcase3D />
       </Suspense>
 
