@@ -8,12 +8,15 @@ import { Menu, X, ShoppingCart, Phone } from 'lucide-react';
 import { Logo } from '@/components/ui/Logo';
 import { useQuote } from '@/context/QuoteContext';
 import { cn } from '@/lib/utils';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 const navLinks = [
-  { name: 'Home', href: '/' },
-  { name: 'About', href: '/about' },
-  { name: 'Products', href: '/products' },
-  { name: 'Contact', href: '/contact' },
+  { name: 'Home',         href: '/'             },
+  { name: 'About',        href: '/about'         },
+  { name: 'Products',     href: '/products'      },
+  { name: 'Certificates', href: '/certificates'  },
+  { name: 'Clients',      href: '/clients'       },
+  { name: 'Contact',      href: '/contact'       },
 ];
 
 export const Navbar = () => {
@@ -35,10 +38,10 @@ export const Navbar = () => {
       className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-all duration-500 px-4 py-4",
         scrolled
-          ? "bg-slate-950/90 backdrop-blur-2xl border-b border-white/5 py-3"
+          ? "bg-background/90 backdrop-blur-2xl border-b border-border/30 py-3"
           : pathname === '/'
             ? "bg-transparent text-white"
-            : "bg-background/50 backdrop-blur-md border-b border-white/5"
+            : "bg-background/50 backdrop-blur-md border-b border-border/30"
       )}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -57,7 +60,7 @@ export const Navbar = () => {
                   pathname === link.href
                     ? "text-primary"
                     : scrolled || pathname !== '/'
-                      ? "text-slate-400 hover:text-white"
+                      ? "text-muted-foreground hover:text-foreground"
                       : "text-white/60 hover:text-white"
                 )}
               >
@@ -68,13 +71,14 @@ export const Navbar = () => {
         </div>
 
         <div className="hidden md:flex items-center gap-6">
+          <ThemeToggle />
           <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
             <Link
               href="/quote"
               className={cn(
                 "relative p-2 transition-colors",
                 scrolled || pathname !== '/'
-                  ? "text-slate-400 hover:text-primary"
+                  ? "text-muted-foreground hover:text-primary"
                   : "text-white/60 hover:text-white"
               )}
             >
@@ -90,7 +94,7 @@ export const Navbar = () => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             href="tel:+917971549587"
-            className="flex items-center gap-3 bg-white text-black px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all shadow-xl shadow-black/20"
+            className="flex items-center gap-3 bg-foreground text-background px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all shadow-xl shadow-black/20"
           >
             <Phone size={14} />
             <span>Call Us</span>
@@ -99,6 +103,7 @@ export const Navbar = () => {
 
         {/* Mobile Toggle */}
         <div className="flex md:hidden items-center gap-4">
+          <ThemeToggle />
           <Link href="/quote" className="relative p-2 text-foreground/80">
             <ShoppingCart size={22} />
             {itemCount > 0 && (

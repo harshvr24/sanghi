@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useRef, useMemo, Suspense } from 'react';
+import { useTheme } from 'next-themes';
 import { Canvas, useFrame } from '@react-three/fiber';
 import {
   Environment,
@@ -325,11 +326,15 @@ function DynamicCamera({ scrollProgress }: { scrollProgress: MotionValue<number>
   return <PerspectiveCamera ref={ref} makeDefault position={[0, 0, 9]} fov={38} />;
 }
 
-function Scene({ scrollProgress }: { scrollProgress: MotionValue<number> }) {
+function Scene({ scrollProgress, isDark }: { scrollProgress: MotionValue<number>; isDark: boolean }) {
+  const fogColor  = isDark ? '#020617' : '#c8d5e8';
+  const bgColor   = isDark ? '#010410' : '#e8eef8';
+  const gridColor = isDark ? '#0a1428' : '#a8bdd4';
+
   return (
     <>
       <DynamicCamera scrollProgress={scrollProgress} />
-      <fog attach="fog" args={['#020617', 6, 28]} />
+      <fog attach="fog" args={[fogColor, 6, 28]} />
       <ambientLight intensity={0.1} />
       <spotLight
         position={[20, 20, 20]}
@@ -360,14 +365,14 @@ function Scene({ scrollProgress }: { scrollProgress: MotionValue<number> }) {
         {Array.from({ length: 14 }).map((_, i) => (
           <mesh key={i} position={[(i - 6.5) * 9, 0, 0]} rotation={[0, Math.PI / 4, 0]}>
             <boxGeometry args={[0.12, 50, 0.12]} />
-            <meshStandardMaterial color="#0a1428" transparent opacity={0.22} />
+            <meshStandardMaterial color={gridColor} transparent opacity={0.22} />
           </mesh>
         ))}
       </group>
 
       <mesh position={[0, 0, -28]} scale={160}>
         <planeGeometry />
-        <meshStandardMaterial color="#010410" />
+        <meshStandardMaterial color={bgColor} />
       </mesh>
     </>
   );
@@ -377,6 +382,9 @@ function Scene({ scrollProgress }: { scrollProgress: MotionValue<number> }) {
 const STAGE_CENTERS = [0.05, 0.31, 0.57, 0.87] as const;
 
 export const PipeShowcase3D = () => {
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme !== 'light';
+
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -386,7 +394,7 @@ export const PipeShowcase3D = () => {
   const scrollIndicatorOpacity = useTransform(scrollYProgress, [0, 0.08], [1, 0]);
 
   return (
-    <div ref={containerRef} className="h-[450vh] w-full bg-slate-950 relative">
+    <div ref={containerRef} className="h-[450vh] w-full bg-background relative">
       <div className="sticky top-0 h-screen w-full overflow-hidden">
 
         {/* 3D Canvas */}
@@ -401,7 +409,7 @@ export const PipeShowcase3D = () => {
             gl.shadowMap.type = THREE.PCFShadowMap;
           }}
         >
-          <Scene scrollProgress={scrollYProgress} />
+          <Scene scrollProgress={scrollYProgress} isDark={isDark} />
           <BakeShadows />
         </Canvas>
 
@@ -423,24 +431,24 @@ export const PipeShowcase3D = () => {
               <span className="text-primary font-black tracking-[1em] uppercase text-xs md:text-sm mb-4 block">
                 Precision // Resilience // Quality
               </span>
-              <h1 className="text-[3rem] md:text-[6rem] font-black text-white tracking-[-0.05em] uppercase italic leading-[0.85]">
+              <h1 className="text-[3rem] md:text-[6rem] font-black text-white mix-blend-difference tracking-[-0.05em] uppercase italic leading-[0.85]">
                 SANGHI
                 <br />
                 <span className="stroke-text text-transparent not-italic block mt-2">
-                  INDUSTRIES
+                  PIPES & TUBES
                 </span>
               </h1>
               <div className="flex items-center justify-center gap-8 mt-5">
                 <div className="h-px w-24 bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
-                <p className="text-sm text-slate-500 font-light tracking-[0.8em] uppercase">
-                  EST. 2008
+                <p className="text-sm text-muted-foreground font-light tracking-[0.5em] uppercase">
+                  Double Flanged Pipes &amp; OPVC Pipes
                 </p>
                 <div className="h-px w-24 bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
               </div>
             </div>
           </TextSection>
 
-          {/* 2 — Ductile Iron specs */}
+          {/* 2 — Double Flanged Pipe specs */}
           <TextSection
             scrollProgress={scrollYProgress}
             inStart={0.18} peakStart={0.24} peakEnd={0.38} outEnd={0.45}
@@ -453,27 +461,28 @@ export const PipeShowcase3D = () => {
                 </div>
                 <div className="h-px w-40 bg-gradient-to-r from-primary/50 to-transparent" />
               </div>
-              <h2 className="text-6xl md:text-8xl font-black text-white mb-6 italic uppercase tracking-tighter leading-none">
-                Ductile
+              <h2 className="text-6xl md:text-8xl font-black text-foreground mb-6 italic uppercase tracking-tighter leading-none">
+                Double
                 <br />
-                <span className="text-primary not-italic">Iron</span>
+                <span className="text-primary not-italic">Flanged</span>
               </h2>
-              <p className="text-slate-400 text-xl mb-10 leading-relaxed font-medium">
-                Engineered for extreme performance. Our DI pipes combine tensile strength
-                with unmatched corrosion resistance — built to last generations.
+              <p className="text-muted-foreground text-xl mb-4 leading-relaxed font-medium">
+                20+ years of centrifugal casting expertise. Our DI Double Flange Pipes combine
+                tensile strength with precision-machined flanged ends — engineered for pump houses,
+                bridge crossings, and critical installations.
               </p>
               <div className="grid grid-cols-2 gap-6">
                 {[
                   { label: 'Tensile Strength', val: '420 MPa' },
                   { label: 'Yield Strength', val: '300 MPa' },
-                  { label: 'Elongation', val: '10%' },
+                  { label: 'Pressure Class', val: 'K9 / K12' },
                   { label: 'Standard', val: 'IS 8329' },
                 ].map((s) => (
                   <div key={s.label} className="border-l-2 border-primary/30 pl-5">
-                    <div className="text-[9px] text-slate-500 font-black uppercase tracking-widest mb-1">
+                    <div className="text-[9px] text-muted-foreground font-black uppercase tracking-widest mb-1">
                       {s.label}
                     </div>
-                    <div className="text-xl font-black text-white italic">{s.val}</div>
+                    <div className="text-xl font-black text-foreground italic">{s.val}</div>
                   </div>
                 ))}
               </div>
@@ -486,15 +495,15 @@ export const PipeShowcase3D = () => {
             inStart={0.44} peakStart={0.50} peakEnd={0.74} outEnd={0.88}
             align="right"
           >
-            <div className="max-w-sm bg-slate-950/85 backdrop-blur-2xl p-8 rounded-[2rem] border border-white/[0.08] shadow-2xl relative">
+            <div className="max-w-sm bg-background/85 backdrop-blur-2xl p-8 rounded-[2rem] border border-border/30 shadow-2xl relative">
               <div className="absolute top-0 right-8 px-4 py-1 bg-primary rounded-b-xl text-[9px] font-black uppercase tracking-widest italic">
                 Internal Scan
               </div>
-              <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter mb-1 mt-4">
+              <h3 className="text-2xl font-black text-foreground uppercase italic tracking-tighter mb-1 mt-4">
                 Molecular{' '}
                 <span className="text-primary not-italic">Integrity</span>
               </h3>
-              <p className="text-slate-500 text-xs font-medium mb-6">
+              <p className="text-muted-foreground text-xs font-medium mb-6">
                 Scanning structural layers...
               </p>
               <div className="space-y-5">
@@ -505,10 +514,10 @@ export const PipeShowcase3D = () => {
                 ].map((item) => (
                   <div key={item.label}>
                     <div className="flex justify-between mb-1.5 text-[8px] font-black uppercase tracking-widest">
-                      <span className="text-slate-400">{item.label}</span>
+                      <span className="text-muted-foreground">{item.label}</span>
                       <span className="text-primary font-mono">{item.p}%</span>
                     </div>
-                    <div className="h-0.5 w-full bg-slate-900 rounded-full overflow-hidden">
+                    <div className="h-0.5 w-full bg-muted rounded-full overflow-hidden">
                       <motion.div
                         initial={{ width: 0 }}
                         whileInView={{ width: `${item.p}%` }}
@@ -520,19 +529,19 @@ export const PipeShowcase3D = () => {
                 ))}
               </div>
               <div className="mt-6 grid grid-cols-2 gap-3">
-                <div className="p-4 rounded-xl bg-white/[0.04] border border-white/[0.08]">
+                <div className="p-4 rounded-xl bg-muted/20 border border-border/30">
                   <div className="text-[8px] text-primary font-black uppercase tracking-widest mb-1">
                     Coating
                   </div>
-                  <div className="text-xs text-slate-400 font-medium">
+                  <div className="text-xs text-muted-foreground font-medium">
                     Bitumen · ISO 8179-1
                   </div>
                 </div>
-                <div className="p-4 rounded-xl bg-white/[0.04] border border-white/[0.08]">
+                <div className="p-4 rounded-xl bg-muted/20 border border-border/30">
                   <div className="text-[8px] text-primary font-black uppercase tracking-widest mb-1">
                     Joint
                   </div>
-                  <div className="text-xs text-slate-400 font-medium">Push-on Tyton</div>
+                  <div className="text-xs text-muted-foreground font-medium">Push-on Tyton</div>
                 </div>
               </div>
             </div>
@@ -545,26 +554,26 @@ export const PipeShowcase3D = () => {
             align="center"
           >
             <div className="text-center">
-              <h2 className="text-[5rem] md:text-[10rem] font-black text-white mb-8 tracking-tighter uppercase italic leading-[0.85]">
-                REDEFINING
+              <h2 className="text-[5rem] md:text-[10rem] font-black text-white mix-blend-difference mb-8 tracking-tighter uppercase italic leading-[0.85]">
+                BUILT
                 <br />
-                <span className="text-primary not-italic">PIPING</span>
+                <span className="text-primary not-italic">TO LAST</span>
               </h2>
-              <p className="text-xl md:text-2xl text-slate-500 mb-14 max-w-3xl mx-auto font-light uppercase tracking-tight leading-tight">
-                Sustainable infrastructure starts with{' '}
-                <span className="text-white font-bold italic">Uncompromising Quality</span>.
+              <p className="text-xl md:text-2xl text-muted-foreground mb-14 max-w-3xl mx-auto font-light uppercase tracking-tight leading-tight">
+                50+ Years of Industry Excellence.{' '}
+                <span className="text-foreground font-bold italic">20+ Years of Double Flanged Pipe Manufacturing.</span>
               </p>
               <div className="flex flex-wrap justify-center gap-14">
                 {[
+                  { l: 'Industry Experience', v: '50+ Yrs' },
                   { l: 'Quality Audits', v: '100%' },
-                  { l: 'States Covered', v: '28/28' },
                   { l: 'Service Life', v: '100+ Yrs' },
                 ].map((s) => (
                   <div key={s.l}>
-                    <div className="text-4xl md:text-5xl font-black text-white mb-2 italic tracking-tighter">
+                    <div className="text-4xl md:text-5xl font-black text-foreground mb-2 italic tracking-tighter">
                       {s.v}
                     </div>
-                    <div className="text-xs text-slate-600 font-black uppercase tracking-[0.3em]">
+                    <div className="text-xs text-muted-foreground font-black uppercase tracking-[0.3em]">
                       {s.l}
                     </div>
                   </div>
@@ -586,7 +595,7 @@ export const PipeShowcase3D = () => {
           style={{ opacity: scrollIndicatorOpacity }}
           className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 pointer-events-none"
         >
-          <span className="text-[9px] text-slate-500 font-black uppercase tracking-[0.4em]">
+          <span className="text-[9px] text-muted-foreground font-black uppercase tracking-[0.4em]">
             Scroll to Explore
           </span>
           <motion.div

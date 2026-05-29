@@ -17,17 +17,19 @@ const colVariants = {
 };
 
 const quickLinks = [
-  { label: 'Home', href: '/' },
-  { label: 'About Us', href: '/about' },
-  { label: 'Our Products', href: '/products' },
-  { label: 'Request Quote', href: '/quote' },
-  { label: 'Contact Us', href: '/contact' },
+  { label: 'Home',          href: '/'             },
+  { label: 'About Us',      href: '/about'         },
+  { label: 'Our Products',  href: '/products'      },
+  { label: 'Certificates',  href: '/certificates'  },
+  { label: 'Our Clients',   href: '/clients'       },
+  { label: 'Request Quote', href: '/quote'         },
+  { label: 'Contact Us',    href: '/contact'       },
 ];
 
 const productLinks = [
-  { label: 'Ductile Iron Pipes', href: '/products?cat=Ductile Iron Pipes' },
-  { label: 'Cast Iron Pipes', href: '/products?cat=Cast Iron Pipes' },
-  { label: 'DI Fittings', href: '/products?cat=DI Fittings' },
+  { label: 'DI Double Flange Pipes', href: '/products?cat=DI Pipes' },
+  { label: 'Cast Iron Pipes', href: '/products?cat=CI Pipes' },
+  { label: 'DI Specials & Fittings', href: '/products?cat=DI Specials' },
   { label: 'Industrial Valves', href: '/products?cat=Valves' },
 ];
 
@@ -42,7 +44,7 @@ const contactItems = [
 
 export const Footer = () => {
   return (
-    <footer className="bg-slate-950 text-slate-300 overflow-hidden">
+    <footer className="bg-background text-foreground/80 overflow-hidden">
       <motion.div
         initial="hidden"
         whileInView="show"
@@ -59,10 +61,10 @@ export const Footer = () => {
         {/* Brand Column */}
         <motion.div variants={colVariants} className="space-y-6">
           <Logo />
-          <p className="text-sm leading-relaxed text-slate-400">
-            M/s Sanghi Pipes & Tubes is a reputed supplier and manufacturer of Cast Iron / Ductile Iron
-            Spun Pipes, Fittings and Valves. We are committed to excellence and quality in infrastructure
-            development.
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Sanghi Pipes &amp; Tubes is a manufacturer of Centrifugally Cast Ductile Iron Double Flange
+            Pipes and OPVC Pipes. BIS Licensed. Serving India&apos;s infrastructure with 50+ years of
+            industry expertise.
           </p>
           <div className="flex gap-4">
             <motion.a
@@ -70,7 +72,7 @@ export const Footer = () => {
               whileHover={{ scale: 1.2, rotate: 8, backgroundColor: 'rgb(59 130 246)' }}
               whileTap={{ scale: 0.9 }}
               transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-              className="p-2 bg-slate-800 rounded-full"
+              className="p-2 bg-muted rounded-full"
             >
               <Globe size={18} />
             </motion.a>
@@ -79,7 +81,7 @@ export const Footer = () => {
 
         {/* Quick Links */}
         <motion.div variants={colVariants}>
-          <h4 className="text-white font-bold mb-6 text-lg">Quick Links</h4>
+          <h4 className="text-foreground font-bold mb-6 text-lg">Quick Links</h4>
           <ul className="space-y-4 text-sm">
             {quickLinks.map((link) => (
               <li key={link.href}>
@@ -98,7 +100,7 @@ export const Footer = () => {
 
         {/* Product Categories */}
         <motion.div variants={colVariants}>
-          <h4 className="text-white font-bold mb-6 text-lg">Product Categories</h4>
+          <h4 className="text-foreground font-bold mb-6 text-lg">Product Categories</h4>
           <ul className="space-y-4 text-sm">
             {productLinks.map((link) => (
               <li key={link.href}>
@@ -117,7 +119,7 @@ export const Footer = () => {
 
         {/* Contact Info */}
         <motion.div variants={colVariants}>
-          <h4 className="text-white font-bold mb-6 text-lg">Contact Info</h4>
+          <h4 className="text-foreground font-bold mb-6 text-lg">Contact Info</h4>
           <ul className="space-y-4 text-sm">
             {contactItems.map((item, i) => (
               <motion.li
@@ -139,9 +141,9 @@ export const Footer = () => {
         whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
         transition={{ delay: 0.4, duration: 0.7 }}
-        className="border-t border-slate-800 py-8 text-center text-xs text-slate-500"
+        className="border-t border-border py-8 text-center text-xs text-muted-foreground"
       >
-        <p>© {new Date().getFullYear()} Sanghi Tubes Private Limited. All Rights Reserved.</p>
+        <p>© {new Date().getFullYear()} Sanghi Pipes &amp; Tubes. All Rights Reserved.</p>
       </motion.div>
     </footer>
   );

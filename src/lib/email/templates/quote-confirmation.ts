@@ -76,7 +76,7 @@ export function quoteConfirmationHtml(data: QuoteConfirmationData): string {
   <tr>
     <td style="padding:0 40px 32px;border-top:1px solid #e2e8f0;">
       <p style="margin:24px 0 4px;color:#94a3b8;font-size:12px;">
-        Sanghi Tubes Private Limited<br>
+        Sanghi Pipes &amp; Tubes<br>
         B No 79/8, Latouche Road, Kanpur, Uttar Pradesh 208002
       </p>
       <p style="margin:0;color:#cbd5e1;font-size:11px;">

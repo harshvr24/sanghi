@@ -6,6 +6,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { QuoteProvider } from "@/context/QuoteContext";
 import { ScrollProgress } from "@/components/ui/ScrollProgress";
+import { ThemeProvider } from "next-themes";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,7 +20,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Sanghi Pipes & Tubes | Premium Industrial Solutions",
-  description: "Sanghi Tubes Private Limited - Manufacturer and supplier of Ductile Iron Pipes, Cast Iron Pipes, Fittings, and Valves in Kanpur, India.",
+  description: "Sanghi Pipes & Tubes — Manufacturer of DI Double Flange Pipes and OPVC Pipes. BIS Licensed. 50+ years of industry expertise. Serving India's infrastructure from Kanpur, Uttar Pradesh.",
 };
 
 export default async function RootLayout({
@@ -33,16 +34,18 @@ export default async function RootLayout({
   const isAdmin  = pathname.startsWith("/admin");
 
   return (
-    <html lang="en" className="scroll-smooth dark">
+    <html lang="en" className="scroll-smooth" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}>
-        <QuoteProvider>
-          {!isAdmin && <ScrollProgress />}
-          {!isAdmin && <Navbar />}
-          <main className="flex-grow">
-            {children}
-          </main>
-          {!isAdmin && <Footer />}
-        </QuoteProvider>
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+          <QuoteProvider>
+            {!isAdmin && <ScrollProgress />}
+            {!isAdmin && <Navbar />}
+            <main className="flex-grow">
+              {children}
+            </main>
+            {!isAdmin && <Footer />}
+          </QuoteProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

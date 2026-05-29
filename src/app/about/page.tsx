@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Target, Users, CheckCircle2 } from 'lucide-react';
+import { Shield, Target, CheckCircle2, Factory, Zap } from 'lucide-react';
 import { FadeIn } from '@/components/ui/FadeIn';
 import { StaggerContainer, StaggerItem } from '@/components/ui/StaggerContainer';
 
@@ -22,11 +22,12 @@ export default function AboutPage() {
               Our Story
             </motion.span>
             <h1 className="text-5xl font-bold mb-8">
-              Engineering Excellence for over a decade.
+              50+ Years of Manufacturing Excellence.
             </h1>
             <p className="text-xl text-muted-foreground leading-relaxed">
-              M/s Sanghi Pipes & Tubes, based in Kanpur, Uttar Pradesh, is a pioneer in the manufacturing
-              and supply of high-grade industrial piping solutions.
+              Sanghi Pipes &amp; Tubes, based in Kanpur, Uttar Pradesh, is a specialist manufacturer
+              of Centrifugally Cast Ductile Iron Double Flange Pipes — and an emerging producer of
+              OPVC pressure pipes for India&apos;s next generation of water infrastructure.
             </p>
           </div>
         </FadeIn>
@@ -69,20 +70,24 @@ export default function AboutPage() {
               <h2 className="text-3xl font-bold mb-6">Our Journey</h2>
               <div className="space-y-6 text-muted-foreground text-lg leading-relaxed">
                 <p>
-                  We have developed our cutting-edge Centrifugally Cast Ductile Iron Double Flange Pipes
-                  manufacturing at Kanpur. Our facility is equipped with modern machinery to ensure the
-                  highest standards of precision and durability.
+                  With over 20 years of focused expertise in centrifugal casting, we manufacture
+                  Ductile Iron Double Flange Pipes to IS:8329/IS:9523 at our dedicated facility
+                  in Kanpur. Every pipe is precision-machined for leak-proof flanged seating, built
+                  for pump houses, bridge crossings, and critical water infrastructure.
                 </p>
                 <p>
-                  As a recipient of the prestigious BIS Licence from the Bureau of Indian Standards, we
-                  have established ourselves as a benchmark for quality in the country.
+                  As a recipient of the prestigious BIS Licence from the Bureau of Indian Standards,
+                  we are recognised as one of India&apos;s most reliable manufacturers of Centrifugally
+                  Cast DI Double Flange Pipes. In 2026, we are expanding our capabilities with the
+                  launch of OPVC (Oriented PVC) pressure pipes — combining our legacy of manufacturing
+                  precision with next-generation pipe technology.
                 </p>
                 <StaggerContainer className="pt-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
                   {[
-                    'Bureau of Indian Standards (BIS)',
+                    'Bureau of Indian Standards (BIS) Licensed',
                     'ISO 9001:2015 Certified',
                     'Govt. Approved Supplier',
-                    'Quality Assured Materials',
+                    'OPVC Pipes — Launching 2026',
                   ].map((cert) => (
                     <StaggerItem key={cert}>
                       <motion.div
@@ -116,22 +121,27 @@ export default function AboutPage() {
           </div>
         </FadeIn>
 
-        <StaggerContainer className="grid grid-cols-1 md:grid-cols-3 gap-12">
+        <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
           {[
+            {
+              icon: <Factory className="text-primary" size={40} />,
+              title: '20+ Years DI Manufacturing',
+              desc: 'Two decades of centrifugal casting expertise. Our DI Double Flange Pipes set the standard for precision and reliability in India.',
+            },
             {
               icon: <Target className="text-primary" size={40} />,
               title: 'Our Mission',
-              desc: 'To provide innovative and sustainable infrastructure solutions that empower communities and industries across the nation.',
+              desc: 'To build India\'s infrastructure with precision-engineered pipes that outlast generations — combining legacy expertise with modern technology.',
             },
             {
               icon: <Shield className="text-primary" size={40} />,
-              title: 'Our Quality',
-              desc: 'Every component fulfills universal requirements. We control and test every stage from raw material selection to final inspection.',
+              title: 'Uncompromising Quality',
+              desc: 'BIS Licensed and ISO 9001:2015 certified. Every pipe is tested from raw material through final inspection before it leaves our facility.',
             },
             {
-              icon: <Users className="text-primary" size={40} />,
-              title: 'Customer-Centric',
-              desc: 'We focus on understanding individual needs, ensuring timely deliveries at competitive prices with outstanding service.',
+              icon: <Zap className="text-primary" size={40} />,
+              title: 'OPVC Innovation',
+              desc: 'Launching in 2026 — Oriented PVC pressure pipes offering superior strength-to-weight ratio for next-generation water distribution networks.',
             },
           ].map((v, i) => (
             <StaggerItem key={i}>

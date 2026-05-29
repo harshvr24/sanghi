@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Check, Info, ChevronRight } from 'lucide-react';
 import { products, categories, Product } from '@/data/products';
@@ -9,17 +10,55 @@ import { cn } from '@/lib/utils';
 import { FadeIn } from '@/components/ui/FadeIn';
 import { InteractiveProductModel } from '@/components/ui/InteractiveProductModel';
 
-export default function ProductsPage() {
-  const [search, setSearch] = useState('');
-  const [activeCategory, setActiveCategory] = useState('All');
-  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+function getProductModelProps(product: Product) {
+  const map: Record<string, { type: string; color: string; metalness: number; roughness: number }> = {
+    'di-double-flange-pipe':  { type: 'flanged-pipe',    color: '#1a2535', metalness: 0.95, roughness: 0.28 },
+    'di-spun-pipe-ss':        { type: 'ss-pipe',         color: '#1a2535', metalness: 0.95, roughness: 0.28 },
+    'ci-double-flange-pipe':  { type: 'flanged-pipe',    color: '#2d2d2d', metalness: 0.72, roughness: 0.65 },
+    'ci-spun-pipe-ss':        { type: 'ss-pipe',         color: '#2d2d2d', metalness: 0.72, roughness: 0.65 },
+    'sluice-valve':           { type: 'gate-valve',      color: '#1e3a5f', metalness: 0.92, roughness: 0.22 },
+    'air-valve':              { type: 'air-valve',       color: '#374151', metalness: 0.85, roughness: 0.35 },
+    'butterfly-valve':        { type: 'butterfly-valve', color: '#1e3a5f', metalness: 0.92, roughness: 0.2  },
+    'non-return-valve':       { type: 'check-valve',     color: '#1e3a5f', metalness: 0.92, roughness: 0.28 },
+    'di-specials':            { type: 'pipe-tee',        color: '#1a2535', metalness: 0.95, roughness: 0.28 },
+    'hdpe-pipes':             { type: 'hdpe-pipe',       color: '#0f172a', metalness: 0,    roughness: 0.75 },
+    'hdpe-specials':          { type: 'hdpe-elbow',      color: '#0f172a', metalness: 0,    roughness: 0.75 },
+    'electrofusion-fittings': { type: 'ef-coupler',      color: '#0f172a', metalness: 0,    roughness: 0.7  },
+    'dwc-pipes':              { type: 'dwc-pipe',        color: '#111827', metalness: 0,    roughness: 0.8  },
+    'opvc-pipes-fittings':    { type: 'opvc-pipe',       color: '#e2e8f0', metalness: 0,    roughness: 0.55 },
+    'ms-pipes':               { type: 'ms-pipe',         color: '#2c3e50', metalness: 0.78, roughness: 0.48 },
+    'ms-specials':            { type: 'pipe-tee',        color: '#2c3e50', metalness: 0.78, roughness: 0.48 },
+    'gi-pipes':               { type: 'gi-pipe',         color: '#9ca3af', metalness: 0.97, roughness: 0.12 },
+    'gi-specials':            { type: 'gi-elbow',        color: '#9ca3af', metalness: 0.95, roughness: 0.15 },
+    'tmt-bars':               { type: 'tmt-bar',         color: '#374151', metalness: 0.85, roughness: 0.55 },
+    'ms-bolts-nut-bolts':     { type: 'bolt',            color: '#9ca3af', metalness: 0.97, roughness: 0.12 },
+  };
+  return map[product.id] ?? { type: 'ss-pipe', color: '#cbd5e1', metalness: 1, roughness: 0.1 };
+}
+
+// Inner component — uses useSearchParams, must be inside a Suspense boundary
+function ProductsContent() {
+  const searchParams = useSearchParams();
   const { addItem } = useQuote();
+
+  // Initialise from URL params so footer/homepage links work
+  const [activeCategory, setActiveCategory] = useState<string>(() => {
+    const cat = searchParams.get('cat');
+    return cat && (categories as readonly string[]).includes(cat) ? cat : 'All';
+  });
+
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(() => {
+    return searchParams.get('id');
+  });
+
+  const [search, setSearch] = useState('');
   const [addedId, setAddedId] = useState<string | null>(null);
 
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
-      const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) || 
-                            p.description.toLowerCase().includes(search.toLowerCase());
+      const matchesSearch =
+        p.name.toLowerCase().includes(search.toLowerCase()) ||
+        p.description.toLowerCase().includes(search.toLowerCase());
       const matchesCat = activeCategory === 'All' || p.category === activeCategory;
       return matchesSearch && matchesCat;
     });
@@ -32,40 +71,14 @@ export default function ProductsPage() {
     setTimeout(() => setAddedId(null), 2000);
   };
 
-  const getProductModelProps = (product: Product) => {
-    const map: Record<string, { type: string; color: string; metalness: number; roughness: number }> = {
-      'di-double-flange-pipe':  { type: 'flanged-pipe',    color: '#1a2535', metalness: 0.95, roughness: 0.28 },
-      'di-spun-pipe-ss':        { type: 'ss-pipe',         color: '#1a2535', metalness: 0.95, roughness: 0.28 },
-      'ci-double-flange-pipe':  { type: 'flanged-pipe',    color: '#2d2d2d', metalness: 0.72, roughness: 0.65 },
-      'ci-spun-pipe-ss':        { type: 'ss-pipe',         color: '#2d2d2d', metalness: 0.72, roughness: 0.65 },
-      'sluice-valve':           { type: 'gate-valve',      color: '#1e3a5f', metalness: 0.92, roughness: 0.22 },
-      'air-valve':              { type: 'air-valve',       color: '#374151', metalness: 0.85, roughness: 0.35 },
-      'butterfly-valve':        { type: 'butterfly-valve', color: '#1e3a5f', metalness: 0.92, roughness: 0.2  },
-      'non-return-valve':       { type: 'check-valve',     color: '#1e3a5f', metalness: 0.92, roughness: 0.28 },
-      'di-specials':            { type: 'pipe-elbow',      color: '#1a2535', metalness: 0.95, roughness: 0.28 },
-      'hdpe-pipes':             { type: 'hdpe-pipe',       color: '#0f172a', metalness: 0,    roughness: 0.75 },
-      'hdpe-specials':          { type: 'pipe-elbow',      color: '#0f172a', metalness: 0,    roughness: 0.75 },
-      'electrofusion-fittings': { type: 'ef-coupler',      color: '#0f172a', metalness: 0,    roughness: 0.7  },
-      'dwc-pipes':              { type: 'dwc-pipe',        color: '#111827', metalness: 0,    roughness: 0.8  },
-      'opvc-pipes-fittings':    { type: 'opvc-pipe',       color: '#cbd5e1', metalness: 0,    roughness: 0.6  },
-      'ms-pipes':               { type: 'ss-pipe',         color: '#4b5563', metalness: 0.82, roughness: 0.5  },
-      'ms-specials':            { type: 'pipe-elbow',      color: '#4b5563', metalness: 0.82, roughness: 0.5  },
-      'gi-pipes':               { type: 'gi-pipe',         color: '#9ca3af', metalness: 0.97, roughness: 0.12 },
-      'gi-specials':            { type: 'pipe-elbow',      color: '#9ca3af', metalness: 0.95, roughness: 0.15 },
-      'tmt-bars':               { type: 'tmt-bar',         color: '#374151', metalness: 0.85, roughness: 0.55 },
-      'ms-bolts-nut-bolts':     { type: 'bolt',            color: '#9ca3af', metalness: 0.97, roughness: 0.12 },
-    };
-    return map[product.id] ?? { type: 'ss-pipe', color: '#cbd5e1', metalness: 1, roughness: 0.1 };
-  };
-
   return (
-    <div className="pt-32 pb-24 min-h-screen bg-slate-950 text-white">
+    <div className="pt-32 pb-24 min-h-screen bg-background text-foreground">
       <div className="max-w-7xl mx-auto px-6">
         <FadeIn>
           <header className="mb-16">
             <span className="text-primary font-bold tracking-[0.3em] uppercase text-xs mb-4 block">Interactive Catalog</span>
             <h1 className="text-5xl md:text-7xl font-black mb-6 tracking-tighter">OUR <span className="text-primary italic">PRODUCTS</span></h1>
-            <p className="text-slate-400 text-xl max-w-2xl leading-relaxed">
+            <p className="text-muted-foreground text-xl max-w-2xl leading-relaxed">
               Explore our precision-engineered industrial solutions in interactive 3D. Designed for extreme durability and mission-critical performance.
             </p>
           </header>
@@ -75,11 +88,11 @@ export default function ProductsPage() {
         <FadeIn delay={0.2}>
           <div className="flex flex-col lg:flex-row gap-6 mb-16">
             <div className="relative flex-grow lg:self-start">
-              <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-500" size={20} />
+              <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
               <input
                 type="text"
                 placeholder="Search precision components..."
-                className="w-full pl-16 pr-6 py-5 bg-slate-900 border border-white/5 rounded-2xl focus:ring-2 focus:ring-primary/50 outline-none transition-all shadow-2xl text-lg"
+                className="w-full pl-16 pr-6 py-5 bg-card border border-border/30 rounded-2xl focus:ring-2 focus:ring-primary/50 outline-none transition-all shadow-2xl text-lg"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -96,7 +109,7 @@ export default function ProductsPage() {
                     "relative px-8 py-5 rounded-2xl font-bold text-sm whitespace-nowrap border uppercase tracking-widest overflow-hidden transition-colors",
                     activeCategory === cat
                       ? "border-primary text-white shadow-lg shadow-primary/20"
-                      : "bg-slate-900 border-white/5 text-slate-400 hover:border-primary/50 hover:text-white"
+                      : "bg-card border-border/30 text-muted-foreground hover:border-primary/50 hover:text-foreground"
                   )}
                 >
                   {activeCategory === cat && (
@@ -127,20 +140,20 @@ export default function ProductsPage() {
                 whileHover={{ y: -10 }}
                 onClick={() => setSelectedProductId(selectedProductId === product.id ? null : product.id)}
                 className={cn(
-                  "group relative bg-slate-900/50 border rounded-[2.5rem] overflow-hidden cursor-pointer transition-all duration-500",
-                  selectedProductId === product.id ? "border-primary/50 ring-1 ring-primary/20" : "border-white/5 hover:border-white/20"
+                  "group relative bg-card/50 border rounded-[2.5rem] overflow-hidden cursor-pointer transition-all duration-500",
+                  selectedProductId === product.id ? "border-primary/50 ring-1 ring-primary/20" : "border-border/30 hover:border-border"
                 )}
               >
-                <div className="aspect-[4/3] relative bg-gradient-to-br from-slate-900 to-black overflow-hidden">
+                <div className="aspect-[4/3] relative bg-gradient-to-br from-muted to-background overflow-hidden">
                   <InteractiveProductModel {...getProductModelProps(product)} />
                   <div className="absolute top-6 right-6">
-                    <span className="bg-white/5 backdrop-blur-md text-white/40 text-[10px] font-black uppercase tracking-[0.2em] px-4 py-2 rounded-full border border-white/10">
+                    <span className="bg-muted/20 backdrop-blur-md text-foreground/40 text-[10px] font-black uppercase tracking-[0.2em] px-4 py-2 rounded-full border border-border/20">
                       {product.category}
                     </span>
                   </div>
                   <div className="absolute bottom-6 left-6 right-6 flex justify-between items-end">
-                    <div className="bg-black/40 backdrop-blur-md p-4 rounded-2xl border border-white/5">
-                      <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest mb-1">Status</p>
+                    <div className="bg-background/80 backdrop-blur-md p-4 rounded-2xl border border-border/30">
+                      <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mb-1">Status</p>
                       <p className="text-xs font-bold text-green-400 flex items-center gap-1.5">
                         <span className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" /> Ready to Ship
                       </p>
@@ -158,10 +171,10 @@ export default function ProductsPage() {
                   <h3 className="text-2xl font-black mb-3 group-hover:text-primary transition-colors tracking-tight italic uppercase">
                     {product.name}
                   </h3>
-                  <p className="text-slate-400 text-sm mb-8 leading-relaxed line-clamp-2">
+                  <p className="text-muted-foreground text-sm mb-8 leading-relaxed line-clamp-2">
                     {product.description}
                   </p>
-                  
+
                   <AnimatePresence>
                     {selectedProductId === product.id && (
                       <motion.div
@@ -170,12 +183,12 @@ export default function ProductsPage() {
                         exit={{ height: 0, opacity: 0 }}
                         className="overflow-hidden"
                       >
-                        <div className="space-y-4 mb-8 pt-4 border-t border-white/5">
+                        <div className="space-y-4 mb-8 pt-4 border-t border-border/30">
                           <p className="text-[10px] text-primary uppercase font-black tracking-widest">Technical Specifications</p>
                           {product.specs && Object.entries(product.specs).map(([key, value]) => (
                             <div key={key} className="flex justify-between items-center text-sm">
-                              <span className="text-slate-500 font-medium">{key}</span>
-                              <span className="text-white font-bold">{value}</span>
+                              <span className="text-muted-foreground font-medium">{key}</span>
+                              <span className="text-foreground font-bold">{value}</span>
                             </div>
                           ))}
                         </div>
@@ -193,7 +206,7 @@ export default function ProductsPage() {
                         "flex-grow py-4 rounded-2xl font-black uppercase text-xs tracking-widest transition-colors overflow-hidden relative",
                         addedId === product.id
                           ? "bg-green-500 text-white"
-                          : "bg-white text-black hover:bg-primary hover:text-white"
+                          : "bg-foreground text-background hover:bg-primary hover:text-white"
                       )}
                     >
                       <AnimatePresence mode="wait">
@@ -223,7 +236,7 @@ export default function ProductsPage() {
                       whileHover={{ scale: 1.1, backgroundColor: 'rgb(71 85 105)' }}
                       whileTap={{ scale: 0.9 }}
                       transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-                      className="px-6 py-4 bg-slate-800 rounded-2xl text-white transition-colors"
+                      className="px-6 py-4 bg-muted rounded-2xl text-foreground transition-colors"
                     >
                       <Info size={20} />
                     </motion.button>
@@ -236,13 +249,26 @@ export default function ProductsPage() {
 
         {filteredProducts.length === 0 && (
           <FadeIn>
-            <div className="text-center py-32 border-2 border-dashed border-white/5 rounded-[4rem]">
-              <div className="text-5xl font-black mb-6 text-slate-800 uppercase italic">Component Not Found</div>
-              <p className="text-slate-500 text-xl">Try adjusting your filters or search terms for precision engineering.</p>
+            <div className="text-center py-32 border-2 border-dashed border-border/30 rounded-[4rem]">
+              <div className="text-5xl font-black mb-6 text-muted-foreground uppercase italic">Component Not Found</div>
+              <p className="text-muted-foreground text-xl">Try adjusting your filters or search terms for precision engineering.</p>
             </div>
           </FadeIn>
         )}
       </div>
     </div>
+  );
+}
+
+// Suspense boundary required by Next.js 16 App Router when useSearchParams is used in a client component
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={
+      <div className="pt-32 pb-24 min-h-screen bg-background text-foreground flex items-center justify-center">
+        <div className="text-muted-foreground text-sm uppercase tracking-widest font-black">Loading catalog...</div>
+      </div>
+    }>
+      <ProductsContent />
+    </Suspense>
   );
 }
