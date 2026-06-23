@@ -410,7 +410,9 @@ function Scene({ scrollProgress, isDark, isMobile }: { scrollProgress: MotionVal
       <Suspense fallback={null}>
         <Environment preset="city" />
       </Suspense>
-      <ContactShadows position={[0, -4.5, 0]} opacity={0.4} scale={34} blur={2.5} far={6} />
+      {/* Ground shadow is desktop-only — on mobile its per-frame offscreen render
+          composites poorly on iOS Safari and shows as a flickering dark blob. */}
+      {!isMobile && <ContactShadows position={[0, -4.5, 0]} opacity={0.4} scale={34} blur={2.5} far={6} />}
 
       {/* Background pillar grid */}
       <group position={[0, 0, -18]}>
@@ -459,7 +461,7 @@ export const PipeShowcase3D = () => {
         {/* 3D Canvas */}
         <Canvas
           shadows={!isMobile}
-          dpr={[1, 1.5]}
+          dpr={isMobile ? [1, 1.25] : [1, 1.5]}
           gl={{
             antialias: true,
             toneMapping: THREE.ACESFilmicToneMapping,
@@ -475,7 +477,7 @@ export const PipeShowcase3D = () => {
         </Canvas>
 
         {/* Dot-grid overlay */}
-        <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(59,130,246,0.055)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.055)_1px,transparent_1px)] bg-[size:80px_80px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_78%)]" />
+        <div className={`absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(59,130,246,0.055)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.055)_1px,transparent_1px)] bg-[size:80px_80px] ${isMobile ? '' : '[mask-image:radial-gradient(ellipse_at_center,black,transparent_78%)]'}`} />
 
         {/* Scroll-driven text overlays */}
         <div className="absolute inset-0 pointer-events-none">
@@ -551,7 +553,7 @@ export const PipeShowcase3D = () => {
             inStart={0.50} peakStart={0.58} peakEnd={0.74} outEnd={0.82}
             align="right"
           >
-            <div className="max-w-md bg-background/85 backdrop-blur-2xl p-8 rounded-[2rem] border border-border/30 shadow-2xl">
+            <div className={`max-w-md p-8 rounded-[2rem] border border-border/30 shadow-2xl ${isMobile ? 'bg-background' : 'bg-background/85 backdrop-blur-2xl'}`}>
               <div className="flex items-center gap-5 mb-6">
                 <div className="h-12 w-12 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-center">
                   <span className="text-primary font-black text-lg italic">02</span>
