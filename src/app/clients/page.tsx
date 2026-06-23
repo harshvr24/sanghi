@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { ArrowRight, HardHat, Wrench, LayoutGrid, MapPin, Package } from 'lucide-react';
+import { ArrowRight, HardHat, Wrench, LayoutGrid, Package } from 'lucide-react';
 import { FadeIn } from '@/components/ui/FadeIn';
 import { StaggerContainer, StaggerItem } from '@/components/ui/StaggerContainer';
 
@@ -182,20 +182,9 @@ export default function ClientsPage() {
                 <span className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground font-bold">{fp.sector}</span>
               </div>
 
-              <h3 className="text-lg font-black text-foreground uppercase tracking-tight leading-tight mb-5">
+              <h3 className="text-lg font-black text-foreground uppercase tracking-tight leading-tight">
                 {fp.client}
               </h3>
-
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <MapPin size={12} className={fp.accentColor} />
-                  <span>{fp.location}</span>
-                </div>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Package size={12} className={fp.accentColor} />
-                  <span>{fp.spec}</span>
-                </div>
-              </div>
             </motion.div>
           ))}
         </div>

@@ -125,7 +125,7 @@ export default function AboutPage() {
           {[
             {
               icon: <Factory className="text-primary" size={40} />,
-              title: '20+ Years DI Manufacturing',
+              title: '20+ Years DF Manufacturing',
               desc: 'Two decades of Manufacturing expertise. Our Double Flanged Pipes set the standard for precision and reliability in India.',
             },
             {

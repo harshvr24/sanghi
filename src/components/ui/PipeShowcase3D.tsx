@@ -1,7 +1,20 @@
 'use client';
 
-import React, { useRef, useMemo, Suspense } from 'react';
+import React, { useRef, useMemo, Suspense, useState, useEffect } from 'react';
 import { useTheme } from 'next-themes';
+
+// Small client-side breakpoint hook (SSR-safe). Mobile = portrait-ish phones/tablets.
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)');
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+  return isMobile;
+}
 import { Canvas, useFrame } from '@react-three/fiber';
 import {
   Environment,
@@ -334,26 +347,35 @@ function HeroPipe({
 }
 
 // ── camera that gently zooms as the user scrolls ──────────────────────────────
-function DynamicCamera({ scrollProgress }: { scrollProgress: MotionValue<number> }) {
+function DynamicCamera({ scrollProgress, isMobile }: { scrollProgress: MotionValue<number>; isMobile: boolean }) {
   const ref = useRef<THREE.PerspectiveCamera>(null);
+  // On narrow portrait phones the camera sits farther back so both pipe lanes
+  // stay framed (the FOV is vertical, so a narrow screen sees less width).
+  const zNear = isMobile ? 15.8 : 13.2;
+  const zFar = isMobile ? 15.0 : 12.2;
   useFrame(() => {
     if (!ref.current) return;
     const p = scrollProgress.get();
     ref.current.fov = THREE.MathUtils.lerp(44, 40, p);
-    ref.current.position.z = THREE.MathUtils.lerp(13.2, 12.2, p);
+    ref.current.position.z = THREE.MathUtils.lerp(zNear, zFar, p);
     ref.current.updateProjectionMatrix();
   });
-  return <PerspectiveCamera ref={ref} makeDefault position={[0, 0, 13.2]} fov={44} />;
+  return <PerspectiveCamera ref={ref} makeDefault position={[0, 0, zNear]} fov={44} />;
 }
 
-function Scene({ scrollProgress, isDark }: { scrollProgress: MotionValue<number>; isDark: boolean }) {
+function Scene({ scrollProgress, isDark, isMobile }: { scrollProgress: MotionValue<number>; isDark: boolean; isMobile: boolean }) {
   const fogColor  = isDark ? '#020617' : '#c8d5e8';
   const bgColor   = isDark ? '#010410' : '#e8eef8';
   const gridColor = isDark ? '#0a1428' : '#a8bdd4';
 
+  // On mobile the lanes move closer to centre and the pipes shrink a touch so
+  // both fit a narrow portrait frame; on desktop the wide full-screen layout stays.
+  const laneX = isMobile ? 1.85 : 3.4;
+  const pipeScale = isMobile ? 1.1 : 1.5;
+
   return (
     <>
-      <DynamicCamera scrollProgress={scrollProgress} />
+      <DynamicCamera scrollProgress={scrollProgress} isMobile={isMobile} />
       <fog attach="fog" args={[fogColor, 8, 32]} />
       <ambientLight intensity={0.14} />
       {/* Key — crisp studio spotlight */}
@@ -362,7 +384,7 @@ function Scene({ scrollProgress, isDark }: { scrollProgress: MotionValue<number>
         angle={0.22}
         penumbra={1}
         intensity={11}
-        castShadow
+        castShadow={!isMobile}
         shadow-mapSize={[2048, 2048]}
       />
       {/* Cool fills for that polished, electric-blue product look */}
@@ -373,16 +395,16 @@ function Scene({ scrollProgress, isDark }: { scrollProgress: MotionValue<number>
       <spotLight position={[0, 6, -18]} angle={0.6} penumbra={1} intensity={9} color="#60a5fa" />
 
       {/* Double Flange pipe — left, opens during beat 2 */}
-      <group position={[-3.4, 0, 0]}>
-        <HeroPipe scrollProgress={scrollProgress} baseX={0} variant="di" openWindow={[0.16, 0.24, 0.40, 0.48]} />
+      <group position={[-laneX, 0, 0]}>
+        <HeroPipe scrollProgress={scrollProgress} baseX={0} variant="di" openWindow={[0.16, 0.24, 0.40, 0.48]} baseScale={pipeScale} />
       </group>
       {/* OPVC pipe — right, opens during beat 3 */}
-      <group position={[3.4, 0, 0]}>
-        <HeroPipe scrollProgress={scrollProgress} baseX={0} variant="opvc" openWindow={[0.52, 0.60, 0.74, 0.82]} />
+      <group position={[laneX, 0, 0]}>
+        <HeroPipe scrollProgress={scrollProgress} baseX={0} variant="opvc" openWindow={[0.52, 0.60, 0.74, 0.82]} baseScale={pipeScale} />
       </group>
 
-      <Sparkles count={80} scale={16} size={3} speed={0.4} opacity={0.24} color="#60a5fa" />
-      <Sparkles count={40} scale={22} size={1.5} speed={0.25} opacity={0.1} color="#ffffff" />
+      <Sparkles count={isMobile ? 24 : 80} scale={16} size={3} speed={0.4} opacity={0.24} color="#60a5fa" />
+      {!isMobile && <Sparkles count={40} scale={22} size={1.5} speed={0.25} opacity={0.1} color="#ffffff" />}
 
       {/* Inner Suspense so the HDR download never blocks the outer page.tsx Suspense boundary. */}
       <Suspense fallback={null}>
@@ -413,7 +435,14 @@ const STAGE_CENTERS = [0.05, 0.31, 0.62, 0.9] as const;
 
 export const PipeShowcase3D = () => {
   const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme !== 'light';
+  // Initialise from the class next-themes applies BEFORE paint, so the WebGL scene
+  // matches the user's theme on the first client render (no dark→light flash on load).
+  const [isDark, setIsDark] = useState(() =>
+    typeof document !== 'undefined' ? document.documentElement.classList.contains('dark') : true,
+  );
+  useEffect(() => { setIsDark(resolvedTheme !== 'light'); }, [resolvedTheme]);
+
+  const isMobile = useIsMobile();
 
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
@@ -425,11 +454,12 @@ export const PipeShowcase3D = () => {
 
   return (
     <div ref={containerRef} className="h-[450vh] w-full bg-background relative">
-      <div className="sticky top-0 h-screen w-full overflow-hidden">
+      <div className="sticky top-0 h-[100svh] w-full overflow-hidden">
 
         {/* 3D Canvas */}
         <Canvas
-          shadows
+          shadows={!isMobile}
+          dpr={[1, 1.5]}
           gl={{
             antialias: true,
             toneMapping: THREE.ACESFilmicToneMapping,
@@ -440,8 +470,8 @@ export const PipeShowcase3D = () => {
             gl.toneMappingExposure = 1.18;
           }}
         >
-          <Scene scrollProgress={scrollYProgress} isDark={isDark} />
-          <BakeShadows />
+          <Scene scrollProgress={scrollYProgress} isDark={isDark} isMobile={isMobile} />
+          {!isMobile && <BakeShadows />}
         </Canvas>
 
         {/* Dot-grid overlay */}
@@ -459,9 +489,6 @@ export const PipeShowcase3D = () => {
             startVisible
           >
             <div className="text-center">
-              <span className="text-primary font-black tracking-[1em] uppercase text-xs md:text-sm mb-4 block">
-                Precision // Resilience // Quality
-              </span>
               <h1 className="text-[3rem] md:text-[6rem] font-black text-white mix-blend-difference tracking-[-0.05em] uppercase italic leading-[0.85]">
                 SANGHI TUBES
                 <br />
@@ -469,11 +496,11 @@ export const PipeShowcase3D = () => {
                   PRIVATE LIMITED
                 </span>
               </h1>
-              <div className="flex items-center justify-center gap-8 mt-5">
+              <div className="flex items-center justify-center gap-8 mt-6">
                 <div className="h-px w-24 bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
-                <p className="text-sm text-muted-foreground font-light tracking-[0.5em] uppercase">
-                  Double Flanged Pipes &amp; OPVC Pipes
-                </p>
+                <span className="text-primary font-black tracking-[0.7em] md:tracking-[1em] uppercase text-xs md:text-sm">
+                  Precision // Resilience // Quality
+                </span>
                 <div className="h-px w-24 bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
               </div>
             </div>

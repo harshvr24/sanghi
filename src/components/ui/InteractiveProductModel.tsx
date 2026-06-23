@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useMemo, Suspense, useState, useEffect } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { Canvas, useFrame, events as createPointerEvents } from '@react-three/fiber';
 import {
   PerspectiveCamera,
   OrbitControls,
@@ -17,6 +17,24 @@ export interface InteractiveProductModelProps {
   metalness?: number;
   roughness?: number;
 }
+
+// R3F connects pointer-event listeners in an async callback that runs after the
+// WebGL context finishes configuring. Because product canvases are lazily
+// mounted/unmounted as cards scroll or get filtered, a card can unmount before
+// that callback fires — leaving the event target null and crashing inside
+// connect() (`Cannot read properties of null (reading 'addEventListener')`).
+// Wrap the default events manager so connect simply no-ops when the target is
+// missing; everything else (OrbitControls, hover, etc.) behaves normally.
+const safePointerEvents = (store: Parameters<typeof createPointerEvents>[0]) => {
+  const manager = createPointerEvents(store);
+  const origConnect = manager.connect?.bind(manager);
+  return {
+    ...manager,
+    connect: (target: HTMLElement) => {
+      if (target && origConnect) origConnect(target);
+    },
+  };
+};
 
 // Creates a shared Three.js material — called at the top level of each model component
 function useMat(color: string, metalness: number, roughness: number) {
@@ -1220,16 +1238,20 @@ function Collar({ color, metalness, roughness }: { color: string; metalness: num
   );
 
   return (
-    <group ref={ref} scale={0.95} rotation={[0.1, 0, 0]}>
-      {/* Central sleeve barrel */}
-      <HollowBarrel outerR={0.42} innerR={innerR} height={1.5} mat={mat} boreMat={boreMat} openTop={false} openBottom={false} />
-      {/* Raised centre band */}
-      <mesh material={mat}>
-        <torusGeometry args={[0.44, 0.05, 16, 48]} />
-      </mesh>
-      {/* Bells at both ends (top mouth opens up, bottom mouth opens down) */}
-      {bell(0.85, 1)}
-      <group rotation={[Math.PI, 0, 0]}>{bell(0.85, 1)}</group>
+    // Outer group auto-spins about the vertical screen axis; inner group lays the
+    // vertically-built collar down on its side so it displays horizontal.
+    <group ref={ref} scale={0.95}>
+      <group rotation={[0, 0, Math.PI / 2]}>
+        {/* Central sleeve barrel */}
+        <HollowBarrel outerR={0.42} innerR={innerR} height={1.5} mat={mat} boreMat={boreMat} openTop={false} openBottom={false} />
+        {/* Raised centre band */}
+        <mesh material={mat}>
+          <torusGeometry args={[0.44, 0.05, 16, 48]} />
+        </mesh>
+        {/* Bells at both ends (top mouth opens up, bottom mouth opens down) */}
+        {bell(0.85, 1)}
+        <group rotation={[Math.PI, 0, 0]}>{bell(0.85, 1)}</group>
+      </group>
     </group>
   );
 }
@@ -1252,18 +1274,52 @@ function FlangedSpigot({ color, metalness, roughness }: { color: string; metalne
   useFrame((_, delta) => { if (ref.current) ref.current.rotation.y += delta * 0.42; });
 
   return (
-    <group ref={ref} scale={0.9} rotation={[0.12, 0, 0]}>
-      {/* Tall plain spigot barrel */}
-      <HollowBarrel outerR={0.34} innerR={0.27} height={2.4} mat={mat} boreMat={boreMat} />
-      {/* Rounded spigot lip at the top */}
-      <mesh material={mat} position={[0, 1.24, 0]}>
-        <cylinderGeometry args={[0.32, 0.34, 0.16, 48, 1, true]} />
-      </mesh>
-      {/* Bevel collar flaring to the flange at the bottom */}
-      <mesh material={mat} position={[0, -1.18, 0]}>
-        <cylinderGeometry args={[0.52, 0.34, 0.14, 48, 1, true]} />
-      </mesh>
-      <FlangeDisk y={-1.3} mat={mat} boltMat={boltMat} boreR={0.27} boreMat={boreMat} />
+    // Outer group auto-spins about the vertical screen axis; inner group lays the
+    // vertically-built spigot down on its side so it displays horizontal.
+    <group ref={ref} scale={0.9}>
+      <group rotation={[0, 0, Math.PI / 2]}>
+        {/* Tall plain spigot barrel */}
+        <HollowBarrel outerR={0.34} innerR={0.27} height={2.4} mat={mat} boreMat={boreMat} />
+        {/* Rounded spigot lip at the top */}
+        <mesh material={mat} position={[0, 1.24, 0]}>
+          <cylinderGeometry args={[0.32, 0.34, 0.16, 48, 1, true]} />
+        </mesh>
+        {/* Bevel collar flaring to the flange at the bottom */}
+        <mesh material={mat} position={[0, -1.18, 0]}>
+          <cylinderGeometry args={[0.52, 0.34, 0.14, 48, 1, true]} />
+        </mesh>
+        <FlangeDisk y={-1.3} mat={mat} boltMat={boltMat} boreR={0.27} boreMat={boreMat} />
+      </group>
+    </group>
+  );
+}
+
+// ── Single Flange Pipe (flange one end, plain barrel — displayed horizontal) ──
+function SingleFlangePipe({ color, metalness, roughness }: { color: string; metalness: number; roughness: number }) {
+  const ref = useRef<THREE.Group>(null);
+  const mat = useMat(color, metalness, roughness);
+  const boreMat = useCementBore();
+  const boltMat = useMemo(() => new THREE.MeshPhysicalMaterial({ color: '#0f172a', metalness: 1, roughness: 0.25 }), []);
+
+  useFrame((_, delta) => { if (ref.current) ref.current.rotation.y += delta * 0.42; });
+
+  return (
+    // Outer group auto-spins about the vertical screen axis; inner group lays the
+    // vertically-built spool down on its side so the pipe displays horizontal.
+    <group ref={ref} scale={0.9}>
+      <group rotation={[0, 0, Math.PI / 2]}>
+        {/* Plain barrel */}
+        <HollowBarrel outerR={0.34} innerR={0.27} height={2.4} mat={mat} boreMat={boreMat} />
+        {/* Rounded spigot lip at the plain end */}
+        <mesh material={mat} position={[0, 1.24, 0]}>
+          <cylinderGeometry args={[0.32, 0.34, 0.16, 48, 1, true]} />
+        </mesh>
+        {/* Bevel collar flaring to the flange at the other end */}
+        <mesh material={mat} position={[0, -1.18, 0]}>
+          <cylinderGeometry args={[0.52, 0.34, 0.14, 48, 1, true]} />
+        </mesh>
+        <FlangeDisk y={-1.3} mat={mat} boltMat={boltMat} boreR={0.27} boreMat={boreMat} />
+      </group>
     </group>
   );
 }
@@ -1355,39 +1411,47 @@ function DuckfootBend90({ color, metalness, roughness }: { color: string; metaln
 
   useFrame((_, delta) => { if (ref.current) ref.current.rotation.y += delta * 0.4; });
 
-  const Rb = 0.55;
-  const tube = 0.28;
+  const Rb = 0.42;   // knuckle radius
+  const tube = 0.3;  // pipe radius
+  const plateTop = -Rb - tube - 0.06;  // top face of the base plate (just below lowest pipe point)
+
+  // Triangular gusset "duck foot" web — right triangle in the X–Y plane: vertical
+  // edge up the back of the standpipe, base out along the foot plate.
+  const gussetGeo = useMemo(() => {
+    const s = new THREE.Shape();
+    s.moveTo(0, 0);
+    s.lineTo(0, 1.0);     // up the standpipe
+    s.lineTo(0.55, 0);    // out along the base plate (hypotenuse back down)
+    s.closePath();
+    return new THREE.ExtrudeGeometry(s, { depth: 0.14, bevelEnabled: false });
+  }, []);
 
   return (
-    <group ref={ref} scale={0.82} position={[-0.1, -0.15, 0]} rotation={[0.16, 0, 0]}>
-      {/* 90° curved casting (vertical leg ↑ at x=Rb, horizontal leg → -X at y=Rb) */}
-      <mesh material={mat}>
+    <group ref={ref} scale={0.6} position={[-0.3, -0.12, 0]} rotation={[0.12, -0.5, 0]}>
+      {/* Tall vertical standpipe — up to the top flange (bottom opening at origin) */}
+      <group position={[0, 0, 0]}>
+        <FlangedArm len={1.0} mat={mat} boreMat={boreMat} boltMat={boltMat} outerR={tube} innerR={0.21} />
+      </group>
+      {/* 90° knuckle at the bottom: arc from (0,0)↓ round to (Rb,-Rb)→+X */}
+      <mesh material={mat} position={[Rb, 0, 0]} rotation={[0, 0, Math.PI]}>
         <torusGeometry args={[Rb, tube, 24, 64, Math.PI / 2]} />
       </mesh>
-      {/* Vertical leg — up to a flange */}
-      <group position={[Rb, 0, 0]}>
-        <FlangedArm len={0.55} mat={mat} boreMat={boreMat} boltMat={boltMat} outerR={tube} innerR={0.2} />
+      {/* Low horizontal side outlet — out to the side flange */}
+      <group position={[Rb, -Rb, 0]} rotation={[0, 0, -Math.PI / 2]}>
+        <FlangedArm len={0.42} mat={mat} boreMat={boreMat} boltMat={boltMat} outerR={tube} innerR={0.21} />
       </group>
-      {/* Horizontal leg — out to a flange */}
-      <group position={[0, Rb, 0]} rotation={[0, 0, Math.PI / 2]}>
-        <FlangedArm len={0.55} mat={mat} boreMat={boreMat} boltMat={boltMat} outerR={tube} innerR={0.2} />
-      </group>
-      {/* Duckfoot — pedestal + flat round base plate below the vertical leg */}
-      <mesh material={mat} position={[Rb, -0.26, 0]}>
-        <cylinderGeometry args={[tube, 0.36, 0.4, 48]} />
+      {/* Flat rectangular foot base plate */}
+      <mesh material={mat} position={[Rb * 0.5, plateTop - 0.05, 0]}>
+        <boxGeometry args={[1.05, 0.1, 0.95]} />
       </mesh>
-      <mesh material={mat} position={[Rb, -0.5, 0]}>
-        <cylinderGeometry args={[0.66, 0.66, 0.1, 48]} />
-      </mesh>
-      {/* Foot bolt holes */}
-      {Array.from({ length: 4 }).map((_, i) => {
-        const a = (i / 4) * Math.PI * 2 + Math.PI / 4;
-        return (
-          <mesh key={i} material={boltMat} position={[Rb + Math.cos(a) * 0.5, -0.5, Math.sin(a) * 0.5]}>
-            <cylinderGeometry args={[0.05, 0.05, 0.14, 12]} />
-          </mesh>
-        );
-      })}
+      {/* Triangular gusset web (the duck foot heel) under the standpipe */}
+      <mesh material={mat} geometry={gussetGeo} position={[0, plateTop, -0.07]} />
+      {/* Foot bolt holes near the plate corners */}
+      {([[-0.42, 0.35], [0.42, 0.35], [-0.42, -0.35], [0.42, -0.35]] as [number, number][]).map(([dx, dz], i) => (
+        <mesh key={i} material={boltMat} position={[Rb * 0.5 + dx, plateTop - 0.05, dz]}>
+          <cylinderGeometry args={[0.05, 0.05, 0.16, 12]} />
+        </mesh>
+      ))}
     </group>
   );
 }
@@ -1452,23 +1516,58 @@ function SocketBend90({ color, metalness, roughness }: { color: string; metalnes
 
   useFrame((_, delta) => { if (ref.current) ref.current.rotation.y += delta * 0.4; });
 
-  const Rb = 0.55;
-  const tube = 0.32;
+  const Rb = 0.5;      // bend radius
+  const tube = 0.27;   // pipe radius
+  const L = 0.5;       // straight arm length between the bend and each socket
+
+  // Bell socket as a lathe-revolved profile (radius, height) built along +Y from
+  // the arm tip: pipe → collar BEAD → flared BELL mouth (~1.45× pipe) → rounded lip.
+  const cupGeo = useMemo(() => {
+    const pts = [
+      [0.27, 0.00], [0.27, 0.06], [0.32, 0.11], [0.36, 0.17],  // collar bead crest
+      [0.31, 0.22], [0.31, 0.26],                              // neck
+      [0.37, 0.35], [0.40, 0.44], [0.40, 0.48], [0.34, 0.49],  // bell flare + rounded lip
+    ].map(([r, y]) => new THREE.Vector2(r, y));
+    return new THREE.LatheGeometry(pts, 64);
+  }, []);
+
+  // One arm = straight pipe (length L) + bell socket at its tip, built along +Y
+  // from the bend junction. Socket: smooth cup + deep dark bore + dark floor + rim.
+  const armSocket = (
+    <group>
+      {/* Straight pipe arm */}
+      <group position={[0, L / 2, 0]}>
+        <HollowBarrel outerR={tube} innerR={0.2} height={L} mat={mat} boreMat={boreMat} openTop={false} />
+      </group>
+      {/* Bell socket at the arm tip */}
+      <group position={[0, L, 0]}>
+        <mesh material={mat} geometry={cupGeo} />
+        {/* Deep dark inner bore wall */}
+        <mesh material={boreMat} position={[0, 0.28, 0]}>
+          <cylinderGeometry args={[0.32, 0.32, 0.42, 48, 1, true]} />
+        </mesh>
+        {/* Dark floor at the bottom of the socket */}
+        <mesh material={boreMat} position={[0, 0.09, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+          <circleGeometry args={[0.32, 48]} />
+        </mesh>
+        {/* Mouth rim annulus around the dark opening */}
+        <mesh material={mat} position={[0, 0.49, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[0.32, 0.4, 48]} />
+        </mesh>
+      </group>
+    </group>
+  );
 
   return (
-    <group ref={ref} scale={0.86} position={[-0.28, -0.28, 0]} rotation={[0.16, 0, 0]}>
-      {/* 90° curved casting */}
+    <group ref={ref} scale={0.6} position={[0.05, 0.05, 0]} rotation={[0.2, 0, 0]}>
+      {/* Smooth 90° bend body — open faces point outward at [Rb,0] (−Y) and [0,Rb] (−X) */}
       <mesh material={mat}>
-        <torusGeometry args={[Rb, tube, 24, 64, Math.PI / 2]} />
+        <torusGeometry args={[Rb, tube, 24, 96, Math.PI / 2]} />
       </mesh>
-      {/* Vertical leg socket */}
-      <group position={[Rb, 0, 0]}>
-        <SocketArm len={0.5} mat={mat} boreMat={boreMat} outerR={tube} innerR={0.24} />
-      </group>
-      {/* Horizontal leg socket */}
-      <group position={[0, Rb, 0]} rotation={[0, 0, Math.PI / 2]}>
-        <SocketArm len={0.5} mat={mat} boreMat={boreMat} outerR={tube} innerR={0.24} />
-      </group>
+      {/* Arm + socket extending DOWN (−Y), out of the bend */}
+      <group position={[Rb, 0, 0]} rotation={[0, 0, Math.PI]}>{armSocket}</group>
+      {/* Arm + socket extending LEFT (−X), out of the bend */}
+      <group position={[0, Rb, 0]} rotation={[0, 0, Math.PI / 2]}>{armSocket}</group>
     </group>
   );
 }
@@ -1650,24 +1749,28 @@ function PuddlePipe({ color, metalness, roughness }: { color: string; metalness:
   useFrame((_, delta) => { if (ref.current) ref.current.rotation.y += delta * 0.4; });
 
   return (
-    <group ref={ref} scale={0.84} rotation={[0.12, 0, 0]}>
-      {/* Barrel */}
-      <HollowBarrel outerR={0.34} innerR={0.27} height={2.6} mat={mat} boreMat={boreMat} />
-      {/* Bevel collars at the ends */}
-      {([-1.18, 1.18] as number[]).map((y, i) => (
-        <mesh key={i} material={mat} position={[0, y, 0]}>
-          <cylinderGeometry args={[0.5, 0.34, 0.12, 48, 1, true]} />
+    // Outer group auto-spins about the vertical screen axis; inner group lays the
+    // vertically-built barrel down on its side so the pipe displays horizontal.
+    <group ref={ref} scale={0.84}>
+      <group rotation={[0, 0, Math.PI / 2]}>
+        {/* Barrel */}
+        <HollowBarrel outerR={0.34} innerR={0.27} height={2.6} mat={mat} boreMat={boreMat} />
+        {/* Bevel collars at the ends */}
+        {([-1.18, 1.18] as number[]).map((y, i) => (
+          <mesh key={i} material={mat} position={[0, y, 0]}>
+            <cylinderGeometry args={[0.5, 0.34, 0.12, 48, 1, true]} />
+          </mesh>
+        ))}
+        <FlangeDisk y={1.32}  mat={mat} boltMat={boltMat} boreR={0.27} boreMat={boreMat} />
+        <FlangeDisk y={-1.32} mat={mat} boltMat={boltMat} boreR={0.27} boreMat={boreMat} />
+        {/* Central puddle collar cast into the concrete wall */}
+        <mesh material={mat} position={[0, 0, 0]}>
+          <cylinderGeometry args={[0.66, 0.66, 0.22, 48]} />
         </mesh>
-      ))}
-      <FlangeDisk y={1.32}  mat={mat} boltMat={boltMat} boreR={0.27} boreMat={boreMat} />
-      <FlangeDisk y={-1.32} mat={mat} boltMat={boltMat} boreR={0.27} boreMat={boreMat} />
-      {/* Central puddle collar cast into the concrete wall */}
-      <mesh material={mat} position={[0, 0, 0]}>
-        <cylinderGeometry args={[0.66, 0.66, 0.22, 48]} />
-      </mesh>
-      <mesh material={mat} position={[0, 0, 0]}>
-        <cylinderGeometry args={[0.5, 0.5, 0.34, 48, 1, true]} />
-      </mesh>
+        <mesh material={mat} position={[0, 0, 0]}>
+          <cylinderGeometry args={[0.5, 0.5, 0.34, 48, 1, true]} />
+        </mesh>
+      </group>
     </group>
   );
 }
@@ -1743,6 +1846,7 @@ function ModelGeometry({ type, color = '#cbd5e1', metalness = 1, roughness = 0.2
     case 'flanged-cross':   return <FlangedCross {...p} />;
     case 'collar':          return <Collar {...p} />;
     case 'flanged-spigot':  return <FlangedSpigot {...p} />;
+    case 'single-flange-pipe': return <SingleFlangePipe {...p} />;
     case 'flanged-adapter': return <FlangedAdapter {...p} />;
     case 'socket-bend-11':  return <SocketBend11 {...p} />;
     case 'plug':            return <Plug {...p} />;
@@ -1777,12 +1881,25 @@ export const InteractiveProductModel = ({ type, color, metalness, roughness }: I
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
+    // Debounce the mount: only mount the Canvas after the card has stayed in view
+    // for a moment, and unmount immediately when it leaves. This prevents a Canvas
+    // from being mounted for cards that scroll past / get filtered out before R3F's
+    // async setup finishes — which otherwise crashes in the event "connect" step
+    // (addEventListener on a now-null target).
+    let timer: ReturnType<typeof setTimeout> | undefined;
     const observer = new IntersectionObserver(
-      ([entry]) => setVisible(entry.isIntersecting),
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          timer = setTimeout(() => setVisible(true), 160);
+        } else {
+          if (timer) clearTimeout(timer);
+          setVisible(false);
+        }
+      },
       { rootMargin: '200px' },
     );
     observer.observe(el);
-    return () => observer.disconnect();
+    return () => { if (timer) clearTimeout(timer); observer.disconnect(); };
   }, []);
 
   return (
@@ -1790,6 +1907,7 @@ export const InteractiveProductModel = ({ type, color, metalness, roughness }: I
       {visible && (
       <Canvas
         shadows
+        events={safePointerEvents}
         gl={{ antialias: true, powerPreference: 'high-performance' }}
         onCreated={({ gl }) => { gl.shadowMap.type = THREE.PCFShadowMap; }}
       >

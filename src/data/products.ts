@@ -287,7 +287,7 @@ export const products: Product[] = [
   },
   {
     id: "di-flanged-tee",
-    name: "D.I. All Flanged Tee",
+    name: "C.I./D.I. All Flanged Tee",
     category: "CI/DI Specials",
     description:
       "Ductile iron all-flanged tee providing a flanged branch outlet on a flanged run — for valve and instrument take-offs in pump houses and flanged pipework.",
@@ -434,7 +434,7 @@ export const products: Product[] = [
   },
   {
     id: "di-duckfoot-bend-90",
-    name: "Duckfoot Double Flanged 90° Bend",
+    name: "Duckfoot Bend",
     category: "CI/DI Specials",
     description:
       "Ductile iron duckfoot 90° bend with double flanged ends and an integral base foot for floor mounting — typically used at the base of pump delivery risers to take vertical loads.",
@@ -455,7 +455,7 @@ export const products: Product[] = [
   },
   {
     id: "di-socket-cross",
-    name: "Crosses, All Sockets",
+    name: "All Socket Cross",
     category: "CI/DI Specials",
     description:
       "Ductile iron all-socket cross (4-way) with push-on (Tyton) sockets on all four outlets for cross junctions in socket & spigot DI pipelines.",
@@ -476,7 +476,7 @@ export const products: Product[] = [
   },
   {
     id: "di-flange-socket-tee",
-    name: "Flange on Double Socket Tees",
+    name: "Flange On Double Socket Tees / F.H. Tee",
     category: "CI/DI Specials",
     description:
       "Ductile iron tee with push-on sockets on the run and a flanged branch outlet — for connecting a flanged branch (valve, hydrant, or meter) onto a socket & spigot DI main.",
@@ -667,7 +667,7 @@ export const products: Product[] = [
 
   {
     id: "hdpe-pipes",
-    name: "HDPE Pipes",
+    name: "HDPE Pipes & Specials",
     category: "HDPE & Polymer",
     description:
       "High-density polyethylene (PE-100) pipes for potable water supply, sewerage, industrial effluent, and irrigation systems. Lightweight, flexible, and corrosion-free.",
@@ -684,24 +684,6 @@ export const products: Product[] = [
       "Pressure Range": "PN 4 – PN 20",
       "Size Range": "DN 20 – 250 mm",
       Colour: "Black with blue stripes (water)",
-    },
-  },
-  {
-    id: "hdpe-specials",
-    name: "HDPE Specials",
-    category: "HDPE & Polymer",
-    description:
-      "HDPE fabricated and moulded fittings — bends, tees, reducers, end caps, flanged stub ends, and couplings — for HDPE pipeline systems using butt fusion or electrofusion jointing.",
-    features: [
-      "Injection moulded and fabricated fittings",
-      "Matching SDR rating to pipe for system integrity",
-      "Fully compatible with PE-100 butt fusion joining",
-      "Flanged stub ends for connection to metal systems",
-    ],
-    specs: {
-      "Size Range": "DN 20 – 250 mm",
-      "Jointing Method": "Butt Fusion",
-      "Pressure Rating": "PN 4 – PN 20",
     },
   },
   {
@@ -749,7 +731,7 @@ export const products: Product[] = [
 
   {
     id: "ms-pipes",
-    name: "M.S. Pipes",
+    name: "M.S. Pipes & Specials",
     category: "MS & GI",
     description:
       "Mild steel welded and seamless pipes for industrial fluid transmission, structural applications, water mains, and fire-fighting systems. Stocked in a wide range of schedules and lengths.",
@@ -769,28 +751,8 @@ export const products: Product[] = [
     },
   },
   {
-    id: "ms-specials",
-    name: "M.S. Specials",
-    category: "MS & GI",
-    description:
-      "Fabricated mild steel pipeline fittings and specials — bends, tees, reducers, flanges, and expansion joints — for MS pipeline systems in water supply, irrigation, and industrial projects.",
-    features: [
-      "Fabricated from IS Grade MS plates and pipes",
-      "Custom bends, tees, reducers to project drawings",
-      "Flanged or welded end connections",
-      "Internal cement mortar lining or epoxy coating",
-      "External anticorrosion coating",
-    ],
-    specs: {
-      Standard: "IS:1239 / IS:3589",
-      Material: "Mild Steel",
-      "End Connection": "Flanged / Welded / Screwed",
-      "Size Range": "DN 15 – 1600 mm (custom)",
-    },
-  },
-  {
     id: "gi-pipes",
-    name: "G.I. Pipes",
+    name: "G.I. Pipes & Specials",
     category: "MS & GI",
     description:
       "Hot-dip galvanized mild steel pipes for potable water supply, plumbing, irrigation, and air distribution systems. Available in light, medium, and heavy classes per IS:1239.",
@@ -806,25 +768,6 @@ export const products: Product[] = [
       "Class": "Light / Medium / Heavy",
       "Size Range": "NB 15 – 150 mm",
       "Galvanizing": "Hot-Dip (IS:4736)",
-    },
-  },
-  {
-    id: "gi-specials",
-    name: "G.I. Specials",
-    category: "MS & GI",
-    description:
-      "Galvanized iron malleable cast iron and forged fittings — elbows, tees, unions, reducers, sockets, and nipples — for GI pipe connections in water supply and plumbing systems.",
-    features: [
-      "Hot-dip galvanized for corrosion resistance",
-      "Malleable iron and forged steel options",
-      "IS:554 taper threaded connections",
-      "Full range of standard fittings stocked",
-    ],
-    specs: {
-      Standard: "IS:1239 / IS:1879",
-      Material: "Galvanized Malleable Iron / Forged Steel",
-      "Thread": "IS:554 Taper BSP",
-      "Size Range": "NB 15 – 150 mm",
     },
   },
   {

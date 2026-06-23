@@ -52,7 +52,7 @@ const categoryCards = [
 const whyChooseCards = [
   {
     icon: Factory,
-    title: '20+ Years DI Manufacturing',
+    title: '20+ Years DF Manufacturing',
     desc: 'Industry-leading expertise in Flanging of centrifugally casted ductile iron/ cast iron pipes - precision engineered to IS:8329.',
   },
   {
@@ -90,7 +90,7 @@ export default function Home() {
       <Suspense
         fallback={
           <div className="h-[450vh] w-full bg-background relative">
-            <div className="sticky top-0 h-screen w-full overflow-hidden">
+            <div className="sticky top-0 h-[100svh] w-full overflow-hidden">
               <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(59,130,246,0.055)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.055)_1px,transparent_1px)] bg-[size:80px_80px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_78%)]" />
               <div className="absolute inset-0 flex items-center justify-center px-8">
                 <div className="text-center relative z-10">
@@ -629,7 +629,7 @@ export default function Home() {
                     accent: 'text-emerald-400',
                     accentBg: 'bg-emerald-400/10',
                     accentGlow: 'rgba(52,211,153,0.4)',
-                    items: ['HDPE Pipes', 'HDPE Specials', 'Electrofusion Fittings', 'DWC Pipes', 'OPVC Pipes', 'OPVC Specials'],
+                    items: ['HDPE Pipes & Specials', 'Electrofusion Fittings', 'DWC Pipes', 'OPVC Pipes', 'OPVC Specials'],
                   },
                   {
                     Icon: Factory,
@@ -640,7 +640,7 @@ export default function Home() {
                     accent: 'text-orange-400',
                     accentBg: 'bg-orange-400/10',
                     accentGlow: 'rgba(251,146,60,0.4)',
-                    items: ['M.S. Pipes', 'M.S. Specials', 'G.I. Pipes', 'G.I. Specials', 'TMT Bars', 'MS Bolts', 'G.I. Bolts'],
+                    items: ['M.S. Pipes & Specials', 'G.I. Pipes & Specials', 'TMT Bars', 'MS Bolts', 'G.I. Bolts'],
                   },
                 ].map((item, i) => (
                   <motion.div
