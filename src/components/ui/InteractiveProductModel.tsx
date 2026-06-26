@@ -6,7 +6,6 @@ import {
   PerspectiveCamera,
   OrbitControls,
   Float,
-  ContactShadows,
   Environment,
 } from '@react-three/drei';
 import * as THREE from 'three';
@@ -1946,6 +1945,12 @@ export const InteractiveProductModel = ({ type, color, metalness, roughness }: I
   // 20 product cards each holding a context, the later cards failed to get one and
   // rendered blank. Toggling on/off keeps only the on-screen cards live.
   const [visible, setVisible] = useState(false);
+  // Only run the 60fps render loop while the card is "active" (hovered / being
+  // dragged). At rest the Canvas uses frameloop="demand": it renders one static
+  // frame and the per-model auto-rotate useFrame loops don't advance, so a screen
+  // full of resting catalog cards costs almost no GPU. Drag-to-orbit still works
+  // at rest because OrbitControls calls invalidate() on interaction.
+  const [active, setActive] = useState(false);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -1965,24 +1970,30 @@ export const InteractiveProductModel = ({ type, color, metalness, roughness }: I
           setVisible(false);
         }
       },
-      { rootMargin: '200px' },
+      { rootMargin: '120px' },
     );
     observer.observe(el);
     return () => { if (timer) clearTimeout(timer); observer.disconnect(); };
   }, []);
 
   return (
-    <div ref={containerRef} className="w-full h-full min-h-[400px] cursor-grab active:cursor-grabbing">
+    <div
+      ref={containerRef}
+      className="w-full h-full min-h-[400px] cursor-grab active:cursor-grabbing"
+      onPointerEnter={() => setActive(true)}
+      onPointerLeave={() => setActive(false)}
+      onPointerDown={() => setActive(true)}
+    >
       {visible && (
       <Canvas
-        shadows
+        frameloop={active ? 'always' : 'demand'}
+        dpr={[1, 1.5]}
         events={safePointerEvents}
         gl={{ antialias: true, powerPreference: 'high-performance' }}
-        onCreated={({ gl }) => { gl.shadowMap.type = THREE.PCFShadowMap; }}
       >
         <PerspectiveCamera makeDefault position={[0, 0, 5]} fov={35} />
         <ambientLight intensity={0.35} />
-        <spotLight position={[10, 10, 10]} intensity={2.5} castShadow />
+        <spotLight position={[10, 10, 10]} intensity={2.5} />
         <pointLight position={[-10, -10, -10]} intensity={1.2} color="#3b82f6" />
         <pointLight position={[5, 5, -5]} intensity={0.6} color="#60a5fa" />
 
@@ -1994,7 +2005,6 @@ export const InteractiveProductModel = ({ type, color, metalness, roughness }: I
         <Suspense fallback={null}>
           <Environment preset="city" />
         </Suspense>
-        <ContactShadows position={[0, -2.5, 0]} opacity={0.3} scale={15} blur={3} far={4} />
       </Canvas>
       )}
     </div>
