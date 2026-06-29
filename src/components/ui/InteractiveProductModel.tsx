@@ -410,84 +410,77 @@ function AirValve({ color, metalness, roughness }: { color: string; metalness: n
   const mat = useMat(color, metalness, roughness);
 
   const boltMat = useMemo(() => new THREE.MeshPhysicalMaterial({ color: '#0f172a', metalness: 1, roughness: 0.25 }), []);
+  // Dark open interior so the bottom mounting flange reads as open-ended
+  const boreMat = useBoreMat(color);
 
   useFrame((_, delta) => { if (ref.current) ref.current.rotation.y += delta * 0.5; });
 
-  // Double-acting flanged air valve: bottom mounting flange → riser → twin domes →
-  // bolted oval top cover (solid). Built vertical (+Y up).
-  return (
-    <group ref={ref} scale={0.58} position={[0, 0.06, 0]}>
-      {/* ── Bottom mounting flange (+ short spigot) ── */}
-      <mesh material={mat} position={[0, -1.26, 0]}>
-        <cylinderGeometry args={[0.24, 0.24, 0.16, 28]} />
-      </mesh>
-      <mesh material={mat} position={[0, -1.13, 0]}>
-        <cylinderGeometry args={[0.52, 0.52, 0.12, 40]} />
-      </mesh>
-      {Array.from({ length: 6 }).map((_, i) => {
-        const a = (i / 6) * Math.PI * 2;
-        return (
-          <mesh key={`bb${i}`} material={boltMat} position={[Math.cos(a) * 0.42, -1.13, Math.sin(a) * 0.42]}>
-            <cylinderGeometry args={[0.035, 0.035, 0.16, 10]} />
-          </mesh>
-        );
-      })}
-      {/* ── Central riser column ── */}
-      <mesh material={mat} position={[0, -0.66, 0]}>
-        <cylinderGeometry args={[0.3, 0.36, 0.82, 36]} />
-      </mesh>
-      {/* Shoulder widening into the twin-dome body */}
-      <mesh material={mat} position={[0, -0.18, 0]}>
-        <cylinderGeometry args={[0.74, 0.36, 0.34, 44]} />
-      </mesh>
-      {/* ── Twin rounded dome chambers (the double-acting body) ── */}
-      {([-0.36, 0.36] as number[]).map((x, ci) => (
-        <mesh key={`dome${ci}`} material={mat} position={[x, 0.16, 0]} scale={[1, 1.12, 1]}>
-          <sphereGeometry args={[0.44, 36, 28]} />
-        </mesh>
-      ))}
-      {/* Fill the valley between the two domes so the body reads as one casting */}
-      <mesh material={mat} position={[0, 0.06, 0]}>
-        <boxGeometry args={[0.74, 0.5, 0.46]} />
-      </mesh>
-      {/* ── Bolted oval flange rim where the cover meets the body ── */}
+  // One round bolted cover (domed lid + 4 bolts) centred over a chamber at x = cx.
+  const cover = (cx: number) => (
+    <group position={[cx, 0, 0]}>
+      {/* Flange rim where the cover bolts onto the chamber */}
       <mesh material={mat} position={[0, 0.52, 0]}>
-        <boxGeometry args={[1.16, 0.12, 0.56]} />
+        <cylinderGeometry args={[0.42, 0.42, 0.1, 36]} />
       </mesh>
-      {([-0.58, 0.58] as number[]).map((x, i) => (
-        <mesh key={`re${i}`} material={mat} position={[x, 0.52, 0]}>
-          <cylinderGeometry args={[0.28, 0.28, 0.12, 28]} />
-        </mesh>
-      ))}
-      {/* Bolts around the oval rim perimeter */}
-      {Array.from({ length: 10 }).map((_, i) => {
-        const a = (i / 10) * Math.PI * 2;
+      {/* Flat cover plate */}
+      <mesh material={mat} position={[0, 0.6, 0]}>
+        <cylinderGeometry args={[0.39, 0.41, 0.08, 36]} />
+      </mesh>
+      {/* Raised domed bump in the centre of the cover */}
+      <mesh material={mat} position={[0, 0.63, 0]}>
+        <sphereGeometry args={[0.24, 28, 18, 0, Math.PI * 2, 0, Math.PI / 2]} />
+      </mesh>
+      {/* 4 bolts + nuts around the cover rim */}
+      {Array.from({ length: 4 }).map((_, i) => {
+        const a = (i / 4) * Math.PI * 2 + Math.PI / 4;
         return (
-          <mesh key={`rb${i}`} material={boltMat} position={[Math.cos(a) * 0.58, 0.58, Math.sin(a) * 0.26]}>
-            <cylinderGeometry args={[0.03, 0.03, 0.12, 8]} />
-          </mesh>
+          <group key={`cb${i}`} position={[Math.cos(a) * 0.34, 0.58, Math.sin(a) * 0.34]}>
+            <mesh material={boltMat}><cylinderGeometry args={[0.028, 0.028, 0.2, 8]} /></mesh>
+            <mesh material={boltMat} position={[0, 0.12, 0]}><cylinderGeometry args={[0.045, 0.045, 0.05, 6]} /></mesh>
+          </group>
         );
       })}
-      {/* ── Solid oval top cover plate ── */}
-      <mesh material={mat} position={[0, 0.66, 0]}>
-        <boxGeometry args={[1.06, 0.1, 0.5]} />
+    </group>
+  );
+
+  // Double air valve: open-ended bottom flange → central throat → two pot chambers,
+  // each with its own round bolted domed cover. Built vertical (+Y up).
+  return (
+    <group ref={ref} scale={0.6} position={[0, 0.05, 0]}>
+      {/* ── Open-ended bottom mounting flange (bolted, with an open bore) ── */}
+      <FlangeDisk y={-1.08} mat={mat} boltMat={boltMat} boreR={0.22} boreMat={boreMat} />
+      {/* Dark open inlet bore rising from the flange so the bottom reads open-ended */}
+      <mesh material={boreMat} position={[0, -0.74, 0]}>
+        <cylinderGeometry args={[0.22, 0.22, 0.7, 32, 1, true]} />
       </mesh>
-      {([-0.53, 0.53] as number[]).map((x, i) => (
-        <mesh key={`tc${i}`} material={mat} position={[x, 0.66, 0]}>
-          <cylinderGeometry args={[0.25, 0.25, 0.1, 28]} />
-        </mesh>
-      ))}
-      {/* ── Two tall bolt studs sticking up from the cover (as in the reference) ── */}
-      {([-0.16, 0.16] as number[]).map((sx, i) => (
-        <group key={`ts${i}`} position={[sx, 0.84, 0]}>
-          <mesh material={boltMat}>
-            <cylinderGeometry args={[0.03, 0.03, 0.32, 10]} />
+      {/* ── Central inlet throat (outer wall) ── */}
+      <mesh material={mat} position={[0, -0.74, 0]}>
+        <cylinderGeometry args={[0.3, 0.34, 0.7, 36, 1, true]} />
+      </mesh>
+      {/* Saddle splitting up into the two pots */}
+      <mesh material={mat} position={[0, -0.36, 0]}>
+        <cylinderGeometry args={[0.84, 0.32, 0.34, 44]} />
+      </mesh>
+      {/* ── Two rounded pot chambers side by side ── */}
+      {([-0.4, 0.4] as number[]).map((x, ci) => (
+        <group key={`pot${ci}`} position={[x, 0, 0]}>
+          {/* Rounded bottom */}
+          <mesh material={mat} position={[0, -0.06, 0]}>
+            <sphereGeometry args={[0.37, 36, 28]} />
           </mesh>
-          <mesh material={boltMat} position={[0, 0.18, 0]}>
-            <cylinderGeometry args={[0.05, 0.05, 0.06, 6]} />
+          {/* Straight upper wall */}
+          <mesh material={mat} position={[0, 0.22, 0]}>
+            <cylinderGeometry args={[0.37, 0.37, 0.56, 36, 1, true]} />
           </mesh>
         </group>
       ))}
+      {/* Valley fill so the twin pots read as one casting */}
+      <mesh material={mat} position={[0, -0.02, 0]}>
+        <boxGeometry args={[0.5, 0.66, 0.5]} />
+      </mesh>
+      {/* ── Two round bolted domed covers (one per chamber) ── */}
+      {cover(-0.4)}
+      {cover(0.4)}
     </group>
   );
 }
